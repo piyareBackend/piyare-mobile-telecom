@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page Editor — PMT Admin</title><link rel="stylesheet" href="../assets/css/main.css"></head>
+<body class="admin-body">
+<div class="admin-nav"><b>📱 PMT Admin</b><a href="dashboard.html">Dashboard</a><a href="editor.html">Page Editor</a><a href="products.html">Products</a><a href="orders.html">Orders</a><a href="repairs.html">Repairs</a><a href="coupons.html">Coupons</a><a href="settings.html">Settings</a><a href="#" id="logout">Logout</a></div>
+<main class="admin-wrap"><h1>Full Page Editor</h1><p style="color:var(--gray)">Text, buttons, links, trust cards, footer and banners can be edited here. This edits content/data, not executable HTML/JS.</p>
+<div id="msg"></div><div class="cms-grid">
+<section class="cms-section"><h3>Site / Contact</h3>
+<div class="field"><label>Business Name</label><input id="site_name"></div><div class="field"><label>Tagline</label><input id="site_tagline"></div>
+<div class="field"><label>WhatsApp Number</label><input id="site_whatsapp"></div><div class="field"><label>Address</label><input id="site_address"></div><div class="field"><label>Opening Hours</label><input id="site_hours"></div></section>
+<section class="cms-section"><h3>Home Hero</h3>
+<div class="field"><label>Eyebrow</label><input id="home_eyebrow"></div><div class="field"><label>Title</label><input id="home_title"></div><div class="field"><label>Description</label><textarea id="home_description"></textarea></div>
+<div class="field"><label>Primary Button</label><input id="home_primaryText"></div><div class="field"><label>Primary Link</label><input id="home_primaryLink"></div>
+<div class="field"><label>Secondary Button</label><input id="home_secondaryText"></div><div class="field"><label>Secondary Link</label><input id="home_secondaryLink"></div></section>
+<section class="cms-section"><h3>Trust Strip</h3><div id="trustEditor"></div></section>
+<section class="cms-section"><h3>Footer</h3><div class="field"><label>Footer Description</label><textarea id="footer_description"></textarea></div></section>
+</div>
+<section class="cms-section" style="margin-top:18px"><h3>Flipkart-style Banner Manager</h3><p style="color:var(--gray)">Multiple banners, auto-slide, arrows, dots, image upload and active/inactive status.</p><div id="bannerEditor"></div><button class="btn btn-blue" id="addBanner">＋ Add Banner</button></section>
+<div style="position:sticky;bottom:0;background:var(--surface);padding:15px 0;margin-top:18px;border-top:1px solid var(--line)"><button class="btn btn-primary" id="save">💾 Save Everything</button> <button class="btn" id="reset">Reset Local Draft</button></div>
+</main>
+<script src="../assets/js/config.js"></script><script src="../assets/js/app.js"></script><script src="../assets/js/cms.js"></script><script src="../assets/js/admin.js"></script>
+<script>
+let content;
+const $=id=>document.getElementById(id);
+function field(id,val){$(id).value=val??""}
+async function start(){content=await loadSiteContent();
+ field("site_name",content.site.name);field("site_tagline",content.site.tagline);field("site_whatsapp",content.site.whatsapp);field("site_address",content.site.address);field("site_hours",content.site.hours);
+ field("home_eyebrow",content.home.eyebrow);field("home_title",content.home.title);field("home_description",content.home.description);field("home_primaryText",content.home.primaryText);field("home_primaryLink",content.home.primaryLink);field("home_secondaryText",content.home.secondaryText);field("home_secondaryLink",content.home.secondaryLink);field("footer_description",content.footer.description);
+ renderTrust();renderBanners();}
+function renderTrust(){ $("trustEditor").innerHTML=(content.trust||[]).map((x,i)=>`<div class="repeat-row"><div class="form-row"><div class="field"><label>Icon</label><input data-t="icon" data-i="${i}" value="${escapeHtml(x.icon)}"></div><div class="field"><label>Title</label><input data-t="title" data-i="${i}" value="${escapeHtml(x.title)}"></div></div><div class="field"><label>Text</label><input data-t="text" data-i="${i}" value="${escapeHtml(x.text)}"></div></div>`).join("")}
+function renderBanners(){ $("bannerEditor").innerHTML=(content.banners||[]).map((b,i)=>`<div class="repeat-row">
+<div class="form-row"><div class="field"><label>Title</label><input data-b="title" data-i="${i}" value="${escapeHtml(b.title)}"></div><div class="field"><label>Subtitle</label><input data-b="subtitle" data-i="${i}" value="${escapeHtml(b.subtitle)}"></div></div>
+<div class="form-row"><div class="field"><label>Button</label><input data-b="button" data-i="${i}" value="${escapeHtml(b.button)}"></div><div class="field"><label>Link</label><input data-b="link" data-i="${i}" value="${escapeHtml(b.link)}"></div></div>
+<div class="upload-box"><label>Banner Image</label><input type="file" accept="image/jpeg,image/png,image/webp" data-file="${i}"><div style="margin-top:8px"><input data-b="image" data-i="${i}" value="${escapeHtml(b.image||"")}" placeholder="Image URL after upload"></div></div>
+<label style="display:block;margin-top:10px"><input type="checkbox" data-b="active" data-i="${i}" ${b.active!==false?"checked":""}> Active</label>
+<button class="btn danger" style="margin-top:10px" data-remove="${i}">Delete Banner</button></div>`).join("");
+ $("bannerEditor").querySelectorAll("[data-remove]").forEach(x=>x.onclick=()=>{content.banners.splice(+x.dataset.remove,1);renderBanners()});
+}
+$("addBanner").onclick=()=>{content.banners.push({id:"b"+Date.now(),title:"New Banner",subtitle:"Banner subtitle",button:"Explore",link:"shop.html",image:"",active:true});renderBanners()};
+async function uploadFile(file){
+ if(!file)return "";
+ if(file.size>5*1024*1024)throw Error("Max banner image size is 5MB.");
+ if(!["image/jpeg","image/png","image/webp"].includes(file.type))throw Error("Only JPG, PNG and WebP allowed.");
+ const base64=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(file);});
+ const d=await pmtPost({action:"uploadImage",filename:file.name,mime:file.type,base64:base64});
+ return d.url;
+}
+$("save").onclick=async()=>{
+ try{
+  content.site={name:$("site_name").value.trim(),tagline:$("site_tagline").value.trim(),whatsapp:$("site_whatsapp").value.trim(),address:$("site_address").value.trim(),hours:$("site_hours").value.trim()};
+  content.home={eyebrow:$("home_eyebrow").value,title:$("home_title").value,description:$("home_description").value,primaryText:$("home_primaryText").value,primaryLink:$("home_primaryLink").value,secondaryText:$("home_secondaryText").value,secondaryLink:$("home_secondaryLink").value};
+  content.footer.description=$("footer_description").value;
+  document.querySelectorAll("[data-t]").forEach(x=>content.trust[+x.dataset.i][x.dataset.t]=x.value);
+  document.querySelectorAll("[data-b]").forEach(x=>{const i=+x.dataset.i;if(x.type==="checkbox")content.banners[i][x.dataset.b]=x.checked;else content.banners[i][x.dataset.b]=x.value});
+  for(const input of document.querySelectorAll("[data-file]")){if(input.files[0])content.banners[+input.dataset.file].image=await uploadFile(input.files[0])}
+  localStorage.setItem("pmt-content",JSON.stringify(content));
+  if(localStorage.getItem("pmt-api-url")) await pmtPost({action:"saveContent",content});
+  $("msg").innerHTML='<div class="panel" style="margin:14px 0">Saved successfully.</div>';
+ }catch(e){$("msg").innerHTML='<div class="panel" style="margin:14px 0;color:var(--red)">'+escapeHtml(e.message)+'</div>'}
+};
+$("reset").onclick=()=>{localStorage.removeItem("pmt-content");location.reload()};
+$("logout").onclick=e=>{e.preventDefault();Admin.logout()};
+start();
+</script></body></html>

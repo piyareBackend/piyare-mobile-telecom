@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Repair Center — Piyare Mobile Telecom</title><link rel="stylesheet" href="assets/css/main.css"></head><body>
+
+<header>
+  <nav class="nav">
+    <a class="brand" href="index.html"><span class="mark">📱</span> Piyare Mobile Telecom</a>
+    <div class="navlinks">
+      <a href="repair.html" class="active">Repair</a>
+      <a href="shop.html" class="">Shop</a>
+      <a href="coupons.html" class="">Coupons</a>
+      <a href="track.html" class="">Track</a>
+      <a href="contact.html" class="">Contact</a>
+    </div>
+    <div class="navcart">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">🌙</button>
+      <button class="cart-btn" id="cartOpen">🛒<span class="cart-count" id="cartCount">0</span></button>
+    </div>
+  </nav>
+</header><section class="page-hero"><div class="wrap hero-center"><div class="section-tag">Repair Center</div><h1>Book your repair ticket</h1><p>Form submit hone ke baad backend/API confirmation handle karega. Browser mein secrets nahi rakhe jaate.</p></div></section>
+<section><div class="wrap"><div class="repair-grid"><div class="repair-steps"><div class="step"><div class="step-num">01</div><div><h4>Details bharo</h4><p>Device aur problem batao.</p></div></div><div class="step"><div class="step-num">02</div><div><h4>Confirmation</h4><p>Shop estimate aur timing confirm karega.</p></div></div><div class="step"><div class="step-num">03</div><div><h4>Track</h4><p>Ticket ID se status dekho.</p></div></div></div>
+<form class="form-card" id="repairForm"><div class="form-row"><div class="field"><label>Naam</label><input id="rName" required maxlength="80"></div><div class="field"><label>Phone</label><input id="rPhone" required inputmode="numeric" maxlength="10" pattern="[6-9][0-9]{9}"></div></div>
+<div class="form-row"><div class="field"><label>Device Model</label><input id="rDevice" required maxlength="80"></div><div class="field"><label>Problem</label><select id="rIssue"><option>Screen Damage</option><option>Battery Issue</option><option>Charging Port</option><option>Water Damage</option><option>Camera Issue</option><option>Software / Other</option></select></div></div>
+<div class="field full" style="margin-bottom:16px"><label>Notes</label><textarea id="rNotes" maxlength="300"></textarea></div><button class="btn btn-blue btn-full">📩 Submit Repair Request</button></form></div></div></section>
+<script>
+document.getElementById("repairForm").addEventListener("submit",async e=>{e.preventDefault();const phone=rPhone.value.trim();if(!/^[6-9][0-9]{9}$/.test(phone))return alert("Valid 10-digit mobile number daalein.");
+const payload={name:rName.value.trim(),phone,device:rDevice.value.trim(),issue:rIssue.value,notes:rNotes.value.trim()};
+if(!window.PMT_API_URL)return alert("Admin → Settings mein Apps Script API URL configure karo. Demo request was not sent.");
+try{const r=await fetch(window.PMT_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createRepair",payload})});const d=await r.json();alert(d.message||"Request submitted");e.target.reset()}catch(err){alert("Request failed. API configuration check karo.")}});
+</script>
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div><div class="foot-brand">📱 Piyare Mobile Telecom</div>
+      <p>Fast, fair aur guaranteed mobile repair aur accessories.</p></div>
+      <div><h5>Quick Links</h5>
+      <a href="repair.html">Book Repair</a><a href="shop.html">Shop</a><a href="coupons.html">Coupons</a><a href="track.html">Track Repair</a></div>
+      <div><h5>Contact</h5><a href="contact.html">📍 Shop Address</a><a href="contact.html">📞 WhatsApp</a><a href="contact.html">🕒 10 AM – 8:30 PM</a></div>
+    </div>
+    <div class="foot-bottom">© 2026 Piyare Mobile Telecom. All rights reserved.</div>
+  </div>
+</footer>
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head"><h3>Your Cart</h3><button class="drawer-close" id="cartClose">✕</button></div>
+  <div class="drawer-body" id="cartBody"></div><div class="drawer-foot" id="cartFoot"></div>
+</div>
+<a class="wa-float" id="waFloat" href="#" target="_blank" rel="noopener noreferrer">💬</a>
+<script src="assets/js/config.js"></script><script src="assets/js/app.js"></script><script src="assets/js/security.js"></script><script src="assets/js/analytics.js"></script><script src="assets/js/cms.js"></script><script src="assets/js/cart.js"></script>
+</body></html>
